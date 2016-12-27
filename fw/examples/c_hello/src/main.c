@@ -33,9 +33,24 @@
 #error Unknown platform
 #endif
 
+static void read_file() {
+  FILE *fp = fopen("README.txt", "r");
+  if (fp != NULL) {
+    char buf[100] = {0};
+    int n = fread(buf, 1, sizeof(buf), fp);
+    if (n > 0) {
+      printf("%s", buf);
+    }
+    fclose(fp);
+  } else {
+    LOG(LL_ERROR, ("Error!"));
+  }
+}
+
 static void blink_timer_cb(void *arg) {
   bool current_level = miot_gpio_toggle(LED_GPIO);
   LOG(LL_INFO, ("%s", (current_level ? "Tick" : "Tock")));
+  read_file();
   (void) arg;
 }
 
@@ -60,17 +75,7 @@ enum miot_app_init_result miot_app_init(void) {
                                  50 /* debounce_ms */, button_cb, NULL);
   }
 
-  { /* Read a file. */
-    FILE *fp = fopen("README.txt", "r");
-    if (fp != NULL) {
-      char buf[100] = {0};
-      int n = fread(buf, 1, sizeof(buf), fp);
-      if (n > 0) {
-        printf("%s\n", buf);
-      }
-      fclose(fp);
-    }
-  }
+  read_file();
 
   return MIOT_APP_INIT_SUCCESS;
 }
